@@ -1,6 +1,7 @@
 package keypair
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -15,13 +16,39 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
-var serviceAccountToken = os.Getenv("KEYPAIR_SERVICE_ACCOUNT_TOKEN")
+var (
+	serviceAccountToken = os.Getenv("KEYPAIR_SERVICE_ACCOUNT_TOKEN")
+	userMapping         = make(map[string]string)
+)
 
 func init() {
 	caddy.RegisterModule(KeypairMiddleware{})
 	httpcaddyfile.RegisterHandlerDirective("keypair", parseCaddyfile)
+
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	namespace := "default"
+	name := "keypair-user-mapping"
+	userKeys, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for uname, pubKey := range userKeys.Data {
+		userMapping[pubKey] = uname
+	}
 }
 
 type KeypairMiddleware struct {
@@ -69,10 +96,13 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 		return err
 	}
 
-	m.logger.Info("Headers before:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
+	user := userMapping[claims.PublicKey]
+	if user == "" {
+		return fmt.Errorf("unauthorized")
+	}
+	r.Header.Set("Impersonate-User", user)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
-	// r.Header.Set("Impersonate-User", userName)
-	m.logger.Info("Headers:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
+
 	return next.ServeHTTP(w, r)
 }
 
@@ -96,6 +126,8 @@ func validateRequest(raw string) (*Claims, error) {
 	// if err := tok.Claims(publicKey, &claims); err != nil {
 	// 	return nil, fmt.Errorf("JWT signature does not match provided public key: %w", err)
 	// }
+
+	// TODO: check expiry
 
 	return &claims, nil
 }
