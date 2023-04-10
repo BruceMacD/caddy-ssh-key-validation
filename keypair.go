@@ -102,6 +102,7 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	}
 	r.Header.Set("Impersonate-User", user)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
+	m.logger.Info("Headers:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
 
 	return next.ServeHTTP(w, r)
 }
