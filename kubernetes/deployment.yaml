@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keypair-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keypair-agent
+  template:
+    metadata:
+      labels:
+        app: keypair-agent
+    spec:
+      containers:
+        - name: keypair-agent
+          image: brucewmac/keypair-caddy:dev
+          ports:
+            - containerPort: 8000
+          env:
+            - name: KEYPAIR_SERVICE_ACCOUNT_TOKEN
+              valueFrom:
+              secretKeyRef:
+                name: keypair-secret
+                key: token

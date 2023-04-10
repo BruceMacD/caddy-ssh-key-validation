@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	serviceAccountToken = ""
-	serviceAccountName  = ""
+	serviceAccountToken = os.Getenv("KEYPAIR_SERVICE_ACCOUNT_TOKEN")
+	serviceAccountName  = "keypair"
 )
 
 func init() {
@@ -91,6 +91,8 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	// }
 
 	m.logger.Info("called middleware")
+	m.logger.Info(serviceAccountToken)
+	m.logger.Info(serviceAccountName)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
 	r.Header.Set("Impersonate-User", serviceAccountName)
 	return next.ServeHTTP(w, r)
