@@ -1,0 +1,26 @@
+apiVersion: v1
+clusters:
+  - cluster:
+      server: http://<KEYPAIR_AGENT_ADDRESS>:8000
+    name: keypair
+contexts:
+  - context:
+      cluster: keypair
+      user: keypair-user
+    name: keypair-context
+current-context: keypair
+kind: Config
+preferences: {}
+users:
+  - name: keypair-user
+    user:
+      exec:
+        apiVersion: client.authentication.k8s.io/v1beta1
+        args:
+          - path/to/kube-token.py
+          - <KEY_ALGORITHM>
+          - path/to/private_key
+        command: python3
+        env: null
+        interactiveMode: IfAvailable
+        provideClusterInfo: false
