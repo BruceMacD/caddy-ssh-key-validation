@@ -3,7 +3,7 @@
 route {
 	keypair
 	reverse_proxy {
-		to localhost:6443
+		to kubernetes.default.svc
 		transport http {
 			tls
 			tls_insecure_skip_verify
