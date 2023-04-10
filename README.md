@@ -1,3 +1,10 @@
+# Building and Deploying
+
+```
+docker buildx build --push --tag brucewmac/keypair-caddy:dev .
+docker pull brucewmac/keypair-caddy:dev
+```
+
 # Setup Kubernetes Cluster
 
 ```

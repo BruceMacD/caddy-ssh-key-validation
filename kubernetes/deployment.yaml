@@ -20,6 +20,6 @@ spec:
           env:
             - name: KEYPAIR_SERVICE_ACCOUNT_TOKEN
               valueFrom:
-              secretKeyRef:
-                name: keypair-secret
-                key: token
+                secretKeyRef:
+                  name: keypair-secret
+                  key: token

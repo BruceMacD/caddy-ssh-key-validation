@@ -13,10 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	serviceAccountToken = os.Getenv("KEYPAIR_SERVICE_ACCOUNT_TOKEN")
-	serviceAccountName  = "keypair"
-)
+var serviceAccountToken = os.Getenv("KEYPAIR_SERVICE_ACCOUNT_TOKEN")
 
 func init() {
 	caddy.RegisterModule(KeypairMiddleware{})
@@ -90,16 +87,14 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	// 	return c, fmt.Errorf("no username in JWT claims")
 	// }
 
-	m.logger.Info("called middleware")
-	m.logger.Info(serviceAccountToken)
-	m.logger.Info(serviceAccountName)
+	m.logger.Info("Headers before:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
-	r.Header.Set("Impersonate-User", serviceAccountName)
+	// r.Header.Set("Impersonate-User", userName)
+	m.logger.Info("Headers:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
 	return next.ServeHTTP(w, r)
 }
 
 func (m *KeypairMiddleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
-	// TODO: can reads args here
 	return nil
 }
 
