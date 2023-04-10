@@ -5,13 +5,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
-	"gopkg.in/square/go-jose.v2/jwt"
+	"go.uber.org/zap"
 )
 
 var (
@@ -25,7 +24,8 @@ func init() {
 }
 
 type KeypairMiddleware struct {
-	w io.Writer
+	w      io.Writer
+	logger *zap.Logger
 }
 
 func (KeypairMiddleware) CaddyModule() caddy.ModuleInfo {
@@ -37,6 +37,7 @@ func (KeypairMiddleware) CaddyModule() caddy.ModuleInfo {
 
 func (m *KeypairMiddleware) Provision(ctx caddy.Context) error {
 	m.w = os.Stdout
+	m.logger = caddy.Log()
 	return nil
 }
 
@@ -56,24 +57,24 @@ type Claims struct {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	authHeader := r.Header.Get("Authorization")
+	// authHeader := r.Header.Get("Authorization")
 
-	raw := strings.TrimPrefix(authHeader, "Bearer ")
-	if raw == "" {
-		return fmt.Errorf("no bearer token found")
-	}
+	// raw := strings.TrimPrefix(authHeader, "Bearer ")
+	// if raw == "" {
+	// 	return fmt.Errorf("no bearer token found")
+	// }
 
-	m.w.Write([]byte(authHeader))
+	// m.w.Write([]byte(authHeader))
 
-	tok, err := jwt.ParseSigned(raw)
-	if err != nil {
-		return fmt.Errorf("invalid JWT signature: %w", err)
-	}
+	// tok, err := jwt.ParseSigned(raw)
+	// if err != nil {
+	// 	return fmt.Errorf("invalid JWT signature: %w", err)
+	// }
 
-	claims := Claims{}
-	if err := tok.UnsafeClaimsWithoutVerification(&claims); err != nil {
-		return fmt.Errorf("invalid token claims: %w", err)
-	}
+	// claims := Claims{}
+	// if err := tok.UnsafeClaimsWithoutVerification(&claims); err != nil {
+	// 	return fmt.Errorf("invalid token claims: %w", err)
+	// }
 
 	// TODO: validate claims with provided public key
 
@@ -89,6 +90,7 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	// 	return c, fmt.Errorf("no username in JWT claims")
 	// }
 
+	m.logger.Info("called middleware")
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
 	r.Header.Set("Impersonate-User", serviceAccountName)
 	return next.ServeHTTP(w, r)

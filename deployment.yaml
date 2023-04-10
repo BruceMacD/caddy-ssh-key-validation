@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keypair-caddy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keypair-caddy
+  template:
+    metadata:
+      labels:
+        app: keypair-caddy
+    spec:
+      containers:
+        - name: keypair-caddy
+          image: brucewmac/keypair-caddy:dev
+          ports:
+            - containerPort: 8000
