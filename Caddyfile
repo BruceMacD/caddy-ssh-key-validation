@@ -3,8 +3,8 @@
 route {
 	keypair
 	reverse_proxy {
-		to kubernetes.default.svc
-		transport https {
+		to kubernetes.default.svc:443
+		transport http {
 			tls
 			tls_insecure_skip_verify
 		}
