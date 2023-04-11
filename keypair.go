@@ -87,6 +87,7 @@ type Claims struct {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
+	m.logger.Info("request headers:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
 	authHeader := r.Header.Get("Authorization")
 
 	raw := strings.TrimPrefix(authHeader, "Bearer ")
