@@ -87,7 +87,6 @@ type Claims struct {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	m.logger.Info("recieved request")
 	authHeader := r.Header.Get("Authorization")
 
 	raw := strings.TrimPrefix(authHeader, "Bearer ")
@@ -100,16 +99,14 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 		return err
 	}
 
-	m.logger.Info("pub key: ", zap.String("pub", fmt.Sprintf(claims.PublicKey)))
-
 	user := m.userMapping[claims.PublicKey]
 	if user == "" {
 		return fmt.Errorf("unauthorized")
 	}
 	r.Header.Set("Impersonate-User", user)
-	m.logger.Info(user)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
-	m.logger.Info("Headers:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
+
+	m.logger.Debug("forwarding user request", zap.String("user", user))
 
 	return next.ServeHTTP(w, r)
 }

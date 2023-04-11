@@ -1,7 +1,7 @@
 # Building and Deploying
 
 ```
-docker buildx build --push --tag brucewmac/keypair-caddy:dev .
+docker buildx build --push --build-arg CACHEBUST=$(date +%s) --tag brucewmac/keypair-caddy:dev .
 docker pull brucewmac/keypair-caddy:dev
 ```
 
