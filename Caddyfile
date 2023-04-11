@@ -1,6 +1,4 @@
-:8000
-
-tls internal
+localhost:8000
 
 route {
 	keypair
