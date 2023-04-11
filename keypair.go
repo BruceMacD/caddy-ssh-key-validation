@@ -103,7 +103,7 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	if user == "" {
 		return fmt.Errorf("unauthorized")
 	}
-	r.Header.Set("Impersonate-User", user)
+	// r.Header.Set("Impersonate-User", user)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
 
 	m.logger.Debug("forwarding user request", zap.String("user", user))
