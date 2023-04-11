@@ -25,7 +25,7 @@ Caddy automatically generates a certificate. You'll need to retrieve it set it i
 ```
 $ kubectl get pods -l app=keypair-agent
 
-$ kubectl cp <pod_name>:/data/caddy/certificates/local/localhost/localhost.crt localhost.crt
+$ kubectl cp <pod_name>:data/caddy/certificates/local/localhost/localhost.crt localhost.crt
 
 $ base64 -i localhost.crt
 # add this value to your Kubernetes config

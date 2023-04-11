@@ -121,14 +121,14 @@ func validateRequest(raw string) (*Claims, error) {
 	}
 
 	// Validate claims with provided public key
-	// publicKey, err := parsePublicKey(claims.PublicKey)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("invalid public key: %w", err)
-	// }
+	publicKey, err := parsePublicKey(claims.PublicKey)
+	if err != nil {
+		return nil, fmt.Errorf("invalid public key: %w", err)
+	}
 
-	// if err := tok.Claims(publicKey, &claims); err != nil {
-	// 	return nil, fmt.Errorf("JWT signature does not match provided public key: %w", err)
-	// }
+	if err := tok.Claims(publicKey, &claims); err != nil {
+		return nil, fmt.Errorf("JWT signature does not match provided public key: %w", err)
+	}
 
 	// TODO: check expiry
 
