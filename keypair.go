@@ -87,25 +87,24 @@ type Claims struct {
 
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
-	// m.logger.Info("request headers:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
 	authHeader := r.Header.Get("Authorization")
 
 	raw := strings.TrimPrefix(authHeader, "Bearer ")
-	if raw != "" {
-		claims, err := validateRequest(raw)
-		if err != nil {
-			return err
-		}
-
-		user := m.userMapping[claims.PublicKey]
-		if user == "" {
-			return fmt.Errorf("unauthorized")
-		}
-		r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
-		r.Header.Set("Impersonate-User", "brucemacd")
-	} else {
-		m.logger.Info("non-bearer auth header", zap.String("auth header", authHeader))
+	if raw == "" {
+		return fmt.Errorf("no bearer token")
 	}
+
+	claims, err := validateRequest(raw)
+	if err != nil {
+		return err
+	}
+
+	user := m.userMapping[claims.PublicKey]
+	if user == "" {
+		return fmt.Errorf("unauthorized")
+	}
+	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
+	r.Header.Set("Impersonate-User", user)
 
 	return next.ServeHTTP(w, r)
 }
