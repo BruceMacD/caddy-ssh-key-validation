@@ -8,5 +8,6 @@ route {
 			tls
 			tls_insecure_skip_verify
 		}
+		timeout 30s
 	}
 }
