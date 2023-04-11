@@ -91,21 +91,20 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	authHeader := r.Header.Get("Authorization")
 
 	raw := strings.TrimPrefix(authHeader, "Bearer ")
-	if raw == "" {
-		return fmt.Errorf("no bearer token found")
+	if raw != "" {
+		claims, err := validateRequest(raw)
+		if err != nil {
+			return err
+		}
+
+		user := m.userMapping[claims.PublicKey]
+		if user == "" {
+			return fmt.Errorf("unauthorized")
+		} else {
+			m.logger.Info("forwarding user request", zap.String("user", user))
+		}
 	}
 
-	claims, err := validateRequest(raw)
-	if err != nil {
-		return err
-	}
-
-	user := m.userMapping[claims.PublicKey]
-	if user == "" {
-		return fmt.Errorf("unauthorized")
-	} else {
-		m.logger.Info("forwarding user request", zap.String("user", user))
-	}
 	// r.Header.Set("Impersonate-User", user)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
 	r.Header.Set("Impersonate-User", "brucemacd")
