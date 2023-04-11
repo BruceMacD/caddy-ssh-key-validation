@@ -3,10 +3,8 @@ package keypair
 import (
 	"context"
 	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -70,25 +68,6 @@ func (m *KeypairMiddleware) Provision(ctx caddy.Context) error {
 	}
 
 	m.userMapping = userMapping
-
-	// Read the certificate file
-	certPath := "/data/caddy/certificates/local/localhost/localhost.crt"
-	certBytes, err := ioutil.ReadFile(certPath)
-	if err != nil {
-		return err
-	}
-
-	// Check if the file is a valid PEM-encoded certificate
-	block, _ := pem.Decode(certBytes)
-	if block == nil || block.Type != "CERTIFICATE" {
-		return fmt.Errorf("invalid PEM-encoded certificate")
-	}
-
-	// Encode the certificate to base64 for use in a kube config file
-	base64Cert := base64.StdEncoding.EncodeToString(pem.EncodeToMemory(block))
-
-	// Output the certificate in the expected format
-	m.logger.Info("certificate authority", zap.String("certificate", base64Cert))
 
 	return nil
 }
