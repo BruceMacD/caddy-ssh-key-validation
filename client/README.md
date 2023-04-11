@@ -24,6 +24,7 @@ python3 kube-token.py RS256 /Users/name/mount/mykey
 ## Kubernetes Config File
 
 - Update the template in `kube-config.yaml`.
+- Replace `<YOUR_BASE64_ENCODED_CERTIFICATE_AUTHORITY>` with the certificate authority of you keypair agent pod.
 - Replace `<KEYPAIR_AGENT_ADDRESS>` with the address of your keypair agent service.
 - Repace `path/to/kube-token.py` with the path to the `kube-token.py` script on your local machine.
 - Update `<KEY_ALGORITHM>` to the algorithm used by your key.
