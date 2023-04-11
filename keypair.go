@@ -100,11 +100,11 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 		user := m.userMapping[claims.PublicKey]
 		if user == "" {
 			return fmt.Errorf("unauthorized")
-		} else {
-			m.logger.Info("forwarding user request", zap.String("user", user))
 		}
 		r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
 		r.Header.Set("Impersonate-User", "brucemacd")
+	} else {
+		m.logger.Info("non-bearer auth header", zap.String("auth header", authHeader))
 	}
 
 	return next.ServeHTTP(w, r)
