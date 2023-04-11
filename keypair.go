@@ -107,7 +107,7 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 	// }
 	// r.Header.Set("Impersonate-User", user)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
-	r.Header.Set("Impersonate-User", "keypair")
+	r.Header.Set("Impersonate-User", "brucemacd")
 
 	return next.ServeHTTP(w, r)
 }
