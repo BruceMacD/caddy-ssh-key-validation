@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -87,24 +88,24 @@ type Claims struct {
 // ServeHTTP implements caddyhttp.MiddlewareHandler.
 func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhttp.Handler) error {
 	// m.logger.Info("request headers:", zap.String("headers", fmt.Sprintf("%+v", r.Header)))
-	// authHeader := r.Header.Get("Authorization")
+	authHeader := r.Header.Get("Authorization")
 
-	// raw := strings.TrimPrefix(authHeader, "Bearer ")
-	// if raw == "" {
-	// 	return fmt.Errorf("no bearer token found")
-	// }
+	raw := strings.TrimPrefix(authHeader, "Bearer ")
+	if raw == "" {
+		return fmt.Errorf("no bearer token found")
+	}
 
-	// claims, err := validateRequest(raw)
-	// if err != nil {
-	// 	return err
-	// }
+	claims, err := validateRequest(raw)
+	if err != nil {
+		return err
+	}
 
-	// user := m.userMapping[claims.PublicKey]
-	// if user == "" {
-	// 	return fmt.Errorf("unauthorized")
-	// } else {
-	// 	m.logger.Info("forwarding user request", zap.String("user", user))
-	// }
+	user := m.userMapping[claims.PublicKey]
+	if user == "" {
+		return fmt.Errorf("unauthorized")
+	} else {
+		m.logger.Info("forwarding user request", zap.String("user", user))
+	}
 	// r.Header.Set("Impersonate-User", user)
 	r.Header.Set("Authorization", "Bearer "+serviceAccountToken)
 	r.Header.Set("Impersonate-User", "brucemacd")
