@@ -12,6 +12,7 @@ spec:
       labels:
         app: keypair-agent
     spec:
+      serviceAccountName: keypair
       containers:
         - name: keypair-agent
           image: brucewmac/keypair-caddy:dev

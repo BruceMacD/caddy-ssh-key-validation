@@ -22,14 +22,29 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-var (
-	serviceAccountToken = os.Getenv("KEYPAIR_SERVICE_ACCOUNT_TOKEN")
-	userMapping         = make(map[string]string)
-)
+var serviceAccountToken = os.Getenv("KEYPAIR_SERVICE_ACCOUNT_TOKEN") // TODO: get this from the secret directly rather than the environment vars
 
 func init() {
 	caddy.RegisterModule(KeypairMiddleware{})
 	httpcaddyfile.RegisterHandlerDirective("keypair", parseCaddyfile)
+}
+
+type KeypairMiddleware struct {
+	w           io.Writer
+	logger      *zap.Logger
+	userMapping map[string]string
+}
+
+func (KeypairMiddleware) CaddyModule() caddy.ModuleInfo {
+	return caddy.ModuleInfo{
+		ID:  "http.handlers.keypair",
+		New: func() caddy.Module { return new(KeypairMiddleware) },
+	}
+}
+
+func (m *KeypairMiddleware) Provision(ctx caddy.Context) error {
+	m.w = os.Stdout
+	m.logger = caddy.Log()
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -46,26 +61,14 @@ func init() {
 		panic(err.Error())
 	}
 
+	userMapping := make(map[string]string)
+
 	for uname, pubKey := range userKeys.Data {
 		userMapping[pubKey] = uname
 	}
-}
 
-type KeypairMiddleware struct {
-	w      io.Writer
-	logger *zap.Logger
-}
+	m.userMapping = userMapping
 
-func (KeypairMiddleware) CaddyModule() caddy.ModuleInfo {
-	return caddy.ModuleInfo{
-		ID:  "http.handlers.keypair",
-		New: func() caddy.Module { return new(KeypairMiddleware) },
-	}
-}
-
-func (m *KeypairMiddleware) Provision(ctx caddy.Context) error {
-	m.w = os.Stdout
-	m.logger = caddy.Log()
 	return nil
 }
 
@@ -96,7 +99,7 @@ func (m KeypairMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, nex
 		return err
 	}
 
-	user := userMapping[claims.PublicKey]
+	user := m.userMapping[claims.PublicKey]
 	if user == "" {
 		return fmt.Errorf("unauthorized")
 	}
