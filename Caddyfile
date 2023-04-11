@@ -1,5 +1,7 @@
 :8000
 
+tls internal
+
 route {
 	keypair
 	reverse_proxy {
