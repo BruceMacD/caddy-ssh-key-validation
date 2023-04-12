@@ -15,7 +15,8 @@ spec:
       serviceAccountName: keypair
       containers:
         - name: keypair-agent
-          image: brucewmac/keypair-caddy:dev
+          image: <your-dockerhub>/keypair-agent:example
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           env:

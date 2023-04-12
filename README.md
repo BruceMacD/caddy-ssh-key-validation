@@ -1,8 +1,8 @@
 # Building and Deploying
 
 ```
-docker buildx build --push --build-arg CACHEBUST=$(date +%s) --tag brucewmac/keypair-caddy:dev .
-docker pull brucewmac/keypair-caddy:dev
+docker buildx build --build-arg CACHEBUST=$(date +%s) --tag <your-dockerhub>/keypair-agent:dev .
+docker pull <your-dockerhub>/keypair-caddy:dev
 ```
 
 # Setup Kubernetes Cluster
