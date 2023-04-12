@@ -2,12 +2,14 @@ package keypair
 
 import (
 	"context"
-	"encoding/base64"
+	"crypto/ecdsa"
+	"crypto/rsa"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
@@ -130,25 +132,38 @@ func validateRequest(raw string) (*Claims, error) {
 		return nil, fmt.Errorf("JWT signature does not match provided public key: %w", err)
 	}
 
-	// TODO: check expiry
+	exp := time.Unix(int64(claims.Expiry), 0)
+	if time.Now().After(exp) {
+		return nil, fmt.Errorf("token is expired")
+	}
 
 	return &claims, nil
 }
 
 func parsePublicKey(publicKey string) (interface{}, error) {
-	// Remove the key type prefix
-	keyData := publicKey[len("ssh-rsa "):]
-	// Decode the base64-encoded key data
-	keyBytes, err := base64.StdEncoding.DecodeString(keyData)
+	sshPublicKey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(publicKey))
 	if err != nil {
-		return nil, fmt.Errorf("error decoding base64: %v", err)
+		return nil, err
 	}
-	// Parse the SSH public key
-	parsedKey, err := ssh.ParsePublicKey(keyBytes)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing public key: %v", err)
+
+	cryptoPublicKey := sshPublicKey.(ssh.CryptoPublicKey)
+
+	switch publicKey := cryptoPublicKey.CryptoPublicKey().(type) {
+	case *rsa.PublicKey:
+		publicKey, ok := cryptoPublicKey.CryptoPublicKey().(*rsa.PublicKey)
+		if !ok {
+			return nil, fmt.Errorf("failed to parse invalid RSA key")
+		}
+		return publicKey, nil
+	case *ecdsa.PublicKey:
+		publicKey, ok := cryptoPublicKey.CryptoPublicKey().(*ecdsa.PublicKey)
+		if !ok {
+			return nil, fmt.Errorf("failed to parse invalid ECDSA key")
+		}
+		return publicKey, nil
 	}
-	return parsedKey, nil
+
+	return nil, fmt.Errorf("unsupported public key type")
 }
 
 func (m *KeypairMiddleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
